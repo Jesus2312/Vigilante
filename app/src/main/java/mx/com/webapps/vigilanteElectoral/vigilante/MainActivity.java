@@ -15,8 +15,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import mx.com.webapps.vigilanteElectoral.R;
 import mx.com.webapps.vigilanteElectoral.webservice.GpsHandler;
-import vigilante.org.vigilante.R;
+import mx.com.webapps.vigilanteElectoral.webservice.GpsTracker;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -88,10 +89,10 @@ public class MainActivity extends ActionBarActivity {
     private  void RequestGpsOn ()
     {
 
-        GpsHandler handler = new GpsHandler(MainActivity.this);
-        boolean gpsEnabled = handler.isGpsEnabled();
+        GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
 
-        if (!gpsEnabled) {
+        if (!gpsTracker.canGetLocation())
+        {
             new AlertDialog.Builder(this)
                     .setTitle("GPS Requerido")
                     .setMessage("Esta aplicacion puede requerir tener el GPS activado, desea activarlo?")
@@ -107,11 +108,10 @@ public class MainActivity extends ActionBarActivity {
                     .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            finish();
+
                         }
                     }).show();
         }
-
     }
 
     public void btVigilalosClick (View v)

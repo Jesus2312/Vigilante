@@ -1,13 +1,17 @@
 package mx.com.webapps.vigilanteElectoral.vigilante;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -36,10 +40,10 @@ import java.util.Date;
 
 import it.sauronsoftware.ftp4j.FTPClient;
 import it.sauronsoftware.ftp4j.FTPDataTransferListener;
+import mx.com.webapps.vigilanteElectoral.R;
 import mx.com.webapps.vigilanteElectoral.webservice.GpsHandler;
+import mx.com.webapps.vigilanteElectoral.webservice.GpsTracker;
 import mx.com.webapps.vigilanteElectoral.webservice.WsConsume;
-import vigilante.org.vigilante.R;
-
 
 public class ReportActivity extends ActionBarActivity {
 
@@ -301,15 +305,46 @@ public class ReportActivity extends ActionBarActivity {
     public void  localizacionClick (View v)
     {
 
-      GpsHandler gpsHandler = new GpsHandler(ReportActivity.this);
+        GpsTracker tracker = new GpsTracker(ReportActivity.this);
+        double lat =0,lon=0;
        try
         {
             if (!btLocalizacion.getText().equals("Remover mi geolocalización")) {
-                double lat = gpsHandler.getLatitude();
-                double lon = gpsHandler.getLongitude();
-                gpsData = String.valueOf(lat) + String.valueOf(lon);
+
+
+                if (!tracker.canGetLocation())
+                {
+                    new AlertDialog.Builder(this)
+                            .setTitle("GPS Requerido")
+                            .setMessage("Esta aplicacion puede requerir tener el GPS activado, desea activarlo?")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+
+                                    Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                    startActivity(i);
+
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            }).show();
+                }
+                else
+                {
+                    // Si esta habilitado entonces .
+                    lat = tracker.getLatitude();
+                    lon = tracker.getLongitude();
+                    gpsData = String.valueOf(lat) + String.valueOf(lon);
+
+                }
+
 
                 if (gpsData != NO_GPS) {
+
                     Toast.makeText(ReportActivity.this, "Localizacion cargada", Toast.LENGTH_LONG).show();
                     //https://www.google.com/maps/place//@40.7028722,-73.9868281,15z/data
                    // String b1 ="https://www.google.com/maps/place/@"+String.valueOf(lat)+String.valueOf(lon)+",15z/data";
@@ -323,7 +358,7 @@ public class ReportActivity extends ActionBarActivity {
             else
             {
                 gpsData = NO_GPS;
-                Toast.makeText(ReportActivity.this,"Localizacion fue removida", Toast.LENGTH_LONG).show();
+                Toast.makeText(ReportActivity.this,"No se cargo su localizacion.", Toast.LENGTH_LONG).show();
                 wbMapa.loadUrl(VigilanteUrls.mapaUrl);
                 btLocalizacion.setText("Si Acepta enviar su geolocalización  por favor haga click aquí");
             }
